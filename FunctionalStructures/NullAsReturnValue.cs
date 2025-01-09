@@ -2,27 +2,19 @@ namespace FunctionalStructures;
 
 public class UserRegistration
 {
-    public string Name { get; }
+    public string? Name { get; }
 
     public string Email { get; }
     
-    public string TelephoneNumber
-    {
-        get => _telephoneNumber;
-        set => _telephoneNumber = value;
-    }
-    
-    private string _telephoneNumber;
-    
-    public UserRegistration(string name, string email)
+    public UserRegistration(string? name, string email)
     {
         Name = name;
         Email = email ?? throw new ArgumentNullException(nameof(email));
     }
-	
+    
     public override string ToString()
     {
-        return $"Name: {PrintName()}, Email:{Email} TelephoneNumber:{_telephoneNumber}";
+        return $"Name: {PrintName()}, Email:{Email}";
     }
 
     private string PrintName() => $"{Name ?? "Unknown"}";
@@ -39,7 +31,7 @@ public class UserService
     };
 
     // Function that sometimes returns null
-    public UserRegistration GetUserProfile(int userId)
+    public UserRegistration? GetUserProfile(int userId)
     {
         return _users.TryGetValue(userId, out var user) ? user : null;
     }
