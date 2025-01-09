@@ -1,15 +1,18 @@
+using FunctionalStructures.FLib;
+using static FunctionalStructures.FLib.FLibHelper;
+
 namespace FunctionalStructures;
 
 public class UserRegistration
 {
-    public string? Name { get; }
+    public Option<string> Name { get; }
 
-    public string Email { get; }
+    public Email Email { get; }
     
-    public UserRegistration(string? name, string email)
+    public UserRegistration(Option<string> name, Email email)
     {
         Name = name;
-        Email = email ?? throw new ArgumentNullException(nameof(email));
+        Email = email;
     }
     
     public override string ToString()
@@ -17,23 +20,30 @@ public class UserRegistration
         return $"Name: {PrintName()}, Email:{Email}";
     }
 
-    private string PrintName() => $"{Name ?? "Unknown"}";
+    private string PrintName()
+    {
+        return Name.Match
+        (
+            someName => someName,
+            () => "Unknown"
+        );
+    }
 }
 
 public class UserService
 {
     private readonly Dictionary<int, UserRegistration> _users = new()
     {
-        { 1, new UserRegistration("Alice", "alice@philips.com") },
-        { 2, new UserRegistration("Bob", "bob@philips.com") },
-        { 3, new UserRegistration(null, "kanenas@philips.com") },
+        { 1, new UserRegistration("Alice", new Email("alice@philips.com")) },
+        { 2, new UserRegistration(Some("Bob"), new Email("bob@philips.com")) },
+        { 3, new UserRegistration(None, new Email("kanenas@lavabit.com")) },
         // { 4, null }
     };
 
     // Function that sometimes returns null
-    public UserRegistration? GetUserProfile(int userId)
+    public Option<UserRegistration> GetUserProfile(int userId)
     {
-        return _users.TryGetValue(userId, out var user) ? user : null;
+        return _users.TryGetValue(userId, out var user) ? Some(user) : None;
     }
 }
 
@@ -42,15 +52,26 @@ public static class NullAsReturnValue
     public static void Run()
     {
         var service = new UserService();
-
+        
         var profile1 = service.GetUserProfile(1);
-        Console.WriteLine(profile1 != null ? profile1.ToString() : "User not found");
+        profile1.Match(
+            some: registration => Console.WriteLine(registration.ToString()),
+            none: () => Console.WriteLine("User not found")
+        );
 
-        var profile2 = service.GetUserProfile(3);
-        Console.WriteLine(profile2 != null ? profile2.ToString() : "User not found");
+        var profile3 = service.GetUserProfile(3);
+        Console.WriteLine(PrintRegistration(profile3));
         
-        var profile3 = service.GetUserProfile(4);
-        Console.WriteLine(profile3 != null ? profile3.ToString() : "User not found");
+        var profile4 = service.GetUserProfile(4);
+        Console.WriteLine(PrintRegistration(profile4));
         
+    }
+
+    private static string PrintRegistration(Option<UserRegistration> registration)
+    {
+        return registration.Match(
+            some: userRegistration => userRegistration.ToString(),
+            none: () => "User not found"
+        );
     }
 }
