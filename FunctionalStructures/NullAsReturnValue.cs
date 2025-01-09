@@ -6,18 +6,26 @@ public class UserRegistration
 
     public string Email { get; }
     
-    public UserRegistration(string name, string email)
+    public string TelephoneNumber
     {
-        Name = name ?? throw new ArgumentNullException(nameof(name));
-        Email = email ?? throw new ArgumentNullException(nameof(email));
+        get => _telephoneNumber;
+        set => _telephoneNumber = value;
     }
     
+    private string _telephoneNumber;
+    
+    public UserRegistration(string name, string email)
+    {
+        Name = name;
+        Email = email ?? throw new ArgumentNullException(nameof(email));
+    }
+	
     public override string ToString()
     {
-        return $"Name: {PrintName()}, Email:{Email}";
+        return $"Name: {PrintName()}, Email:{Email} TelephoneNumber:{_telephoneNumber}";
     }
 
-    private string PrintName() => $"{Name}";
+    private string PrintName() => $"{Name ?? "Unknown"}";
 }
 
 public class UserService
@@ -26,7 +34,7 @@ public class UserService
     {
         { 1, new UserRegistration("Alice", "alice@philips.com") },
         { 2, new UserRegistration("Bob", "bob@philips.com") },
-        // { 3, new UserRegistration(null, "kanenas@philips.com") },
+        { 3, new UserRegistration(null, "kanenas@philips.com") },
         // { 4, null }
     };
 
@@ -48,6 +56,9 @@ public static class NullAsReturnValue
 
         var profile2 = service.GetUserProfile(3);
         Console.WriteLine(profile2 != null ? profile2.ToString() : "User not found");
+        
+        var profile3 = service.GetUserProfile(4);
+        Console.WriteLine(profile3 != null ? profile3.ToString() : "User not found");
         
     }
 }
