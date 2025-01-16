@@ -9,7 +9,9 @@ public class UserRegistration
 
     public Email Email { get; }
     
-    public UserRegistration(Option<string> name, Email email)
+    public bool IsActive { get; }
+    
+    public UserRegistration(Option<string> name, Email email, bool isActive = true)
     {
         Name = name;
         Email = email;
@@ -17,7 +19,12 @@ public class UserRegistration
     
     public override string ToString()
     {
-        return $"Name: {PrintName()}, Email:{Email}";
+        string PrintActive(bool isActive)
+        {
+            return isActive ? "Yes" : "No";
+        }
+
+        return $"Name: {PrintName()}, Email:{Email}, Active: {PrintActive(IsActive)}";
     }
 
     private string PrintName()
@@ -28,6 +35,12 @@ public class UserRegistration
             () => "Unknown"
         );
     }
+}
+
+public static class UserRegistrationExtensions
+{
+    public static UserRegistration Deactivate(this UserRegistration registration) =>
+        new(registration.Name, registration.Email, false);
 }
 
 public class UserService
@@ -52,21 +65,13 @@ public static class NullAsReturnValue
     public static void Run()
     {
         var service = new UserService();
-        
-        var profile1 = service.GetUserProfile(1);
-        profile1.Match(
-            some: registration => Console.WriteLine(registration.ToString()),
-            none: () => Console.WriteLine("User not found")
-        );
-
-        var profile3 = service.GetUserProfile(3);
-        Console.WriteLine(PrintRegistration(profile3));
-        
-        var profile4 = service.GetUserProfile(4);
-        Console.WriteLine(PrintRegistration(profile4));
-        
+        Enumerable.Range(1, 4)
+            .Map(service.GetUserProfile)
+            .Map(profile => profile.Map(UserRegistrationExtensions.Deactivate))
+            .Map(PrintRegistration)
+            .ForEach(Console.WriteLine);
     }
-
+    
     private static string PrintRegistration(Option<UserRegistration> registration)
     {
         return registration.Match(
