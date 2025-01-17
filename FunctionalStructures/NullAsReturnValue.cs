@@ -16,7 +16,12 @@ public class UserRegistration
         Name = name;
         Email = email;
     }
-    
+
+    public static Option<UserRegistration> Create(Option<string> name, Email email, bool isActive = true)
+    {
+        return Some(new UserRegistration(name, email, isActive));
+    }
+
     public override string ToString()
     {
         string PrintActive(bool isActive)
@@ -45,14 +50,22 @@ public static class UserRegistrationExtensions
 
 public class UserService
 {
-    private readonly Dictionary<int, UserRegistration> _users = new()
-    {
-        { 1, new UserRegistration("Alice", new Email("alice@philips.com")) },
-        { 2, new UserRegistration(Some("Bob"), new Email("bob@philips.com")) },
-        { 3, new UserRegistration(None, new Email("kanenas@lavabit.com")) },
-        // { 4, null }
-    };
+    private readonly Dictionary<int, UserRegistration> _users;
 
+    public UserService()
+    {
+        _users = new Dictionary<int, UserRegistration>();
+        Email.Create("alice@philips.com")
+            .Bind(r => UserRegistration.Create("Alice", r))
+            .Map(alice => _users.Add(1, alice));
+        Email.Create("bob@philips.com")
+            .Bind(r => UserRegistration.Create(Some("Bob"), r))
+            .Map(bob => _users.Add(2, bob));
+        Email.Create("kanenas@lavabit.com")
+            .Bind(r => UserRegistration.Create(None, r))
+            .Map(ulysses => _users.Add(3, ulysses));
+    }
+    
     // Function that sometimes returns null
     public Option<UserRegistration> GetUserProfile(int userId)
     {
@@ -64,11 +77,14 @@ public static class NullAsReturnValue
 {
     public static void Run()
     {
+        Func<UserRegistration, bool> isPhilipsWorker =
+            registration => registration.Email.ToString().EndsWith("@philips.com");
+        
         var service = new UserService();
         Enumerable.Range(1, 4)
-            .Map(service.GetUserProfile)
-            .Map(profile => profile.Map(UserRegistrationExtensions.Deactivate))
-            .Map(PrintRegistration)
+            .Bind(service.GetUserProfile)
+            .Where(isPhilipsWorker)
+            .Map(UserRegistrationExtensions.Deactivate)
             .ForEach(Console.WriteLine);
     }
     
