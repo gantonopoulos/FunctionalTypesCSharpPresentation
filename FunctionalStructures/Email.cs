@@ -1,6 +1,6 @@
 using System.Text.RegularExpressions;
-using FunctionalStructures.FLib;
-using static FunctionalStructures.FLib.FLibHelper;
+using LaYumba.Functional;
+using static LaYumba.Functional.F;
 
 namespace FunctionalStructures;
 

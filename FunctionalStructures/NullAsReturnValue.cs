@@ -1,5 +1,5 @@
-using FunctionalStructures.FLib;
-using static FunctionalStructures.FLib.FLibHelper;
+using LaYumba.Functional;
+using static LaYumba.Functional.F;
 
 namespace FunctionalStructures;
 
@@ -36,8 +36,8 @@ public class UserRegistration
     {
         return Name.Match
         (
-            someName => someName,
-            () => "Unknown"
+            () => "Unknown",
+            someName => someName
         );
     }
 }
@@ -91,8 +91,8 @@ public static class NullAsReturnValue
     private static string PrintRegistration(Option<UserRegistration> registration)
     {
         return registration.Match(
-            some: userRegistration => userRegistration.ToString(),
-            none: () => "User not found"
+            Some: userRegistration => userRegistration.ToString(),
+            None: () => "User not found"
         );
     }
 }
