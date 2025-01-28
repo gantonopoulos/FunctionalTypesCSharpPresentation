@@ -11,15 +11,15 @@ public class UserRegistration
     
     public bool IsActive { get; }
     
-    public UserRegistration(Option<string> name, Email email, bool isActive = true)
+    private UserRegistration(Option<string> name, Email email, bool isActive = true)
     {
         Name = name;
         Email = email;
     }
 
-    public static Option<UserRegistration> Create(Option<string> name, Email email, bool isActive = true)
+    public static UserRegistration Create(Option<string> name, Email email, bool isActive = true)
     {
-        return Some(new UserRegistration(name, email, isActive));
+        return new UserRegistration(name, email, isActive);
     }
 
     public override string ToString()
@@ -45,25 +45,18 @@ public class UserRegistration
 public static class UserRegistrationExtensions
 {
     public static UserRegistration Deactivate(this UserRegistration registration) =>
-        new(registration.Name, registration.Email, false);
+        UserRegistration.Create(registration.Name, registration.Email, false);
 }
 
 public class UserService
 {
-    private readonly Dictionary<int, UserRegistration> _users;
+    private readonly Dictionary<int, UserRegistration> _users = new();
 
-    public UserService()
+    public Option<Unit> RegisterUser(int id, Option<string> name, string email)
     {
-        _users = new Dictionary<int, UserRegistration>();
-        Email.Create("alice@philips.com")
-            .Bind(r => UserRegistration.Create("Alice", r))
-            .Map(alice => _users.Add(1, alice));
-        Email.Create("bob@philips.com")
-            .Bind(r => UserRegistration.Create(Some("Bob"), r))
-            .Map(bob => _users.Add(2, bob));
-        Email.Create("kanenas@lavabit.com")
-            .Bind(r => UserRegistration.Create(None, r))
-            .Map(ulysses => _users.Add(3, ulysses));
+        return Email.Create(email)
+            .Map(e => UserRegistration.Create(name, e))
+            .Map(u => _users.Add(id, u));
     }
     
     // Function that sometimes returns null
@@ -81,6 +74,10 @@ public static class NullAsReturnValue
             registration => registration.Email.ToString().EndsWith("@philips.com");
         
         var service = new UserService();
+        service.RegisterUser(1, "Alice", "alice@philips.com");
+        service.RegisterUser(2, Some("Bob"), "bob@philips.com");
+        service.RegisterUser(3, None, "kanenas@lavabit.com");
+        
         Enumerable.Range(1, 4)
             .Bind(service.GetUserProfile)
             .Where(isPhilipsWorker)
