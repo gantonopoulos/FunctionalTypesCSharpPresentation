@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using LaYumba.Functional;
-using static LaYumba.Functional.F;
+using LanguageExt;
+using static LanguageExt.Prelude;
 
 namespace FunctionalStructures;
 
@@ -23,8 +23,8 @@ public static class NullSneakDuringSerialization
         public override void Write(Utf8JsonWriter writer, Option<T> value, JsonSerializerOptions options)
         {
             value.Match(
-                writer.WriteNullValue, 
-                wrappedValue => JsonSerializer.Serialize(writer, wrappedValue, options)
+                None:  writer.WriteNullValue, 
+                Some: wrappedValue => JsonSerializer.Serialize(writer, wrappedValue, options)
             );
         }
     }

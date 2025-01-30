@@ -1,10 +1,10 @@
 using System.Text.RegularExpressions;
-using LaYumba.Functional;
-using static LaYumba.Functional.F;
+using LanguageExt;
+using static LanguageExt.Prelude;
 
 namespace FunctionalStructures;
 
-public readonly struct Email
+public readonly struct Email: IEquatable<Email>
 {
     private static readonly Regex EmailRegex = new(
         @"^[^@\s]+@[^@\s]+\.[^@\s]+$", 
@@ -17,25 +17,27 @@ public readonly struct Email
         Value = value;
     }
 
-    public static Option<Email> Create(string email)
+    public static Either<string, Email> Create(string email)
     {
-        if (string.IsNullOrWhiteSpace(email))
-        {
-            return None;
-            //throw new ArgumentException("Email cannot be null or empty.", nameof(email));
-        }
+        if (email is null)
+            throw new ArgumentNullException(nameof(email), "Email cannot be null");
 
+        if (string.Empty.Equals(email))
+            return Left("Email cannot be empty!");
+        
         if (!EmailRegex.IsMatch(email))
-        {
-            return None;
-            //throw new ArgumentException("Invalid email format.", nameof(email));
-        }
+            return Left($"Invalid email format:{email}");
 
-        return Some(new Email(email));
+        return Right(new Email(email));
     }
-    
+
     public static implicit operator string(Email email) => email.Value;
 
     public override string ToString() => Value;
 
+    public bool Equals(Email other) => Value == other.Value;
+
+    public override bool Equals(object? obj) => obj is Email other && Equals(other);
+
+    public override int GetHashCode() => Value.GetHashCode();
 }
