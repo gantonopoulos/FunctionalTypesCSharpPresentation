@@ -1,5 +1,6 @@
-
+using FunctionalStructures.ErrorDefinitions;
 using LanguageExt;
+using LanguageExt.Common;
 using static LanguageExt.Prelude;
 
 namespace FunctionalStructures;
@@ -8,7 +9,7 @@ public class Registrations
 {
     private readonly System.Collections.Generic.HashSet<UserRegistration> _users = [];
 
-    public Either<string, UserRegistration> RegisterUser(Option<string> name, string email)
+    public Either<Error, UserRegistration> RegisterUser(Option<string> name, string email)
     {
         return Email.Create(email)
             .Map(e => UserRegistration.Create(name, e))
@@ -24,33 +25,34 @@ public class Registrations
             : Some(existing);
     }
 
-    private Either<string, UserRegistration> VerifyEmailIsReal(UserRegistration toCheck)
+    private Either<Error, UserRegistration> VerifyEmailIsReal(UserRegistration toCheck)
     {
         try
         {
             return EmailLocator.IsRealEmail(toCheck.Email)
                 ? toCheck
-                : $"The provided Email:{toCheck.Email} could not be verified.";
+                : EmailDoesNotExist.Create(toCheck.Email);
         }
-        catch (HttpRequestException)
+        catch (HttpRequestException e)
         {
-            return $"Error while trying to request email verification for: {toCheck}";
+            return Error.New($"Error while trying to request email verification for: {toCheck}", e as Exception);
         }
-        catch (TimeoutException)
+        catch (TimeoutException e)
         {
-            return $"Timeout while trying to request email verification for: {toCheck}";
+            return Error.New($"Timeout while trying to request email verification for: {toCheck}", e as Exception);
         }
         catch (Exception e)
         {
-            return $"An unexpected error occurred while trying to request email " +
-                   $"verification for: {toCheck}. Error: {e.Message}";
+            return Error.New(
+                $"An unexpected error occurred while trying to request email verification for: {toCheck}",
+                e);
         }
     }
 
-    private Either<string, UserRegistration> Save(UserRegistration registration)
+    private Either<Error, UserRegistration> Save(UserRegistration registration)
     {
         return _users.Add(registration)
             ? registration
-            : $"There exists already a registration with Email: {registration.Email}.";
+            : RegistrationExists.Create(registration.Email);
     }
 }

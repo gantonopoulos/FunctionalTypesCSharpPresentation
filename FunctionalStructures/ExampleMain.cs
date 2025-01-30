@@ -1,4 +1,5 @@
 using LanguageExt;
+using LanguageExt.Common;
 using static LanguageExt.Prelude;
 
 namespace FunctionalStructures;
@@ -16,7 +17,7 @@ public static class ExampleMain
             (None, "kanenas@lavabit.com")
         ];
 
-        _ = Right<string, (Option<string> Name, string Email)>(usersToRegister.First())
+        Right<Error, (Option<string> Name, string Email)>(usersToRegister.First())
             .Bind(entry => service.RegisterUser(entry.Name, entry.Email))
             .PrintRegistrationResult();
 

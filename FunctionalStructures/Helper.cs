@@ -1,4 +1,6 @@
+using FunctionalStructures.ErrorDefinitions;
 using LanguageExt;
+using LanguageExt.Common;
 using static LanguageExt.Prelude;
 
 namespace FunctionalStructures;
@@ -23,6 +25,33 @@ public static class Helper
             registration => $"User {registration} was registered successfully!",
             errorMessage => errorMessage
         ));
+        return unit;
+    }
+    
+    public static Unit PrintRegistrationResult(this Either<Error, UserRegistration> @this)
+    {
+        Console.WriteLine(@this.Match(
+            registration => $"User {registration} was registered successfully!",
+            error =>
+            {
+                switch (error)
+                {
+                    case EmailCannotBeEmpty:
+                    case EmailDoesNotExist:
+                    case InvalidEmailFormat:
+                    case EmailVerificationTimeout:
+                    case RegistrationExists:
+                        //Log as warning
+                        break;
+                    case Exceptional:
+                        // LogAsError
+                        break;
+                    default:
+                        throw error.ToException();
+                }
+
+                return error.Message;
+            }));
         return unit;
     }
 }
